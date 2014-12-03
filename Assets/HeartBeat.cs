@@ -8,7 +8,7 @@ public class HeartBeat : MonoBehaviour
 	{
 		if(Enabled)
 		{
-			Handheld.Vibrate();
+			Vibration.Vibrate(10);
 		}
 	}
 }

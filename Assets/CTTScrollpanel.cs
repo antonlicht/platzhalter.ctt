@@ -115,6 +115,14 @@ public class CTTScrollpanel : MonoBehaviour
 		AddElementToTransform(element);
 	}
 
+	public void AddElementBefore(RectTransform element, RectTransform position)
+	{
+		Remove(element);
+		var index = Elements.IndexOf(position);
+		Elements.Insert(index, element);
+		AddElementToTransform(element);
+	}
+
 	private void AddElementToTransform(RectTransform element)
 	{
 		var layout = element.gameObject.AddComponent<LayoutElement>();

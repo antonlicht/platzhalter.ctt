@@ -34,18 +34,23 @@ public class NetworkManager : MonoBehaviour
 	
 	public void CreateGame()
 	{
-		Network.InitializeServer(4, Port, !Network.HavePublicAddress());
+		Debug.Log("Initialize Server");
+		Network.InitializeServer(64, Port, !Network.HavePublicAddress());
+		Debug.Log("Register Host on MaserServer");
 		MasterServer.RegisterHost(GameType, SystemInfo.deviceName);
+		Debug.Log("Game Created");
 	}
 	
 	public void RequestHosts()
 	{
 		MasterServer.RequestHostList(GameType);
+		Debug.Log("Request Hosts");
 	}
 	
 	public void ConnectToHost(HostData host)
 	{
 		Network.Connect(host);
+		Debug.Log("Connect To Host");
 	}
 	
 	
@@ -54,14 +59,24 @@ public class NetworkManager : MonoBehaviour
 		switch (msEvent)
 		{
 		case (MasterServerEvent.HostListReceived):
+			Debug.Log("Hostlist recieved!");
 			if (OnHostlistRecieved != null)
+			{
+				Debug.Log("Start Poll Hostlist");
 				OnHostlistRecieved(MasterServer.PollHostList());
+			}
+			else
+			{
+				Debug.Log("Hostlist is null");
+			}
 			break;
 		case (MasterServerEvent.RegistrationSucceeded):
+			Debug.Log("Registration succeeded!");
 			if (OnGameCreated != null)
 				OnGameCreated();
 			break;
 		default:
+			Debug.Log("Create Game Failed!");
 			if (OnCreateGameFailed != null)
 				OnCreateGameFailed();
 			break;
@@ -71,38 +86,46 @@ public class NetworkManager : MonoBehaviour
 	
 	private void OnFailedToConnectToMasterServer()
 	{
+		Debug.Log("OnFailedToConnectToMasterServer");
 		if (OnMSConnectionFailed != null)
 			OnMSConnectionFailed();
 	}
 	
 	private void OnFailedToConnect()
 	{
+		Debug.Log("OnFailedToConnect");
 		if (OnConnectionFailed != null)
 			OnConnectionFailed();
 	}
 	
 	private void OnConnectedToServer()
 	{
+		Debug.Log("OnConnectedToServer");
 		if (OnConnected != null)
 			OnConnected();
 	}
 	
 	private void OnDisconnectedFromServer()
 	{
+		Debug.Log("OnDisconnectedFromServer");
 		if (OnDisconnected != null)
 			OnDisconnected();
 	}
 	
 	private void OnPlayerConnected()
 	{
-		
+		Debug.Log("OnPlayerConnected");
 	}
 	
 	private void OnPlayerDisconnected()
 	{
-		
+		Debug.Log("OnPlayerDisconnected");
 	}
-	
+
+	void OnDestroy()
+	{
+		Network.Disconnect();
+	}
 	
 	
 }

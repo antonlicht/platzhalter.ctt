@@ -40,6 +40,8 @@ public class GameManager : MonoBehaviour
 		get { return _heartState; }
 		set
 		{
+			if(value == State.Normal)
+				Effects.Enabled = _life <= GameConstants.START_BEATING_AT;
 			if(_heartState == value) return;
 			_heartState = value;
 			if(_heartState == State.Normal)
@@ -47,7 +49,6 @@ public class GameManager : MonoBehaviour
 				if(!HeartAnimation.isPlaying)
 					HeartAnimation.Play();
 				HeartAnimation["Beat"].speed = GameConstants.BEATS_PER_SECOND;
-				Effects.Enabled = false;
 			}
 			else if (_heartState == State.Fast)
 			{
@@ -82,6 +83,7 @@ public class GameManager : MonoBehaviour
 		if(_life <= 0)
 		{
 			Debug.Log("GameOver");
+			Vibration.Vibrate(5000);
 			TimeTextView.text = (Time.time-_startTime).ToString();
 			_gameRunning = false;
 			HeartState = State.Stopped;

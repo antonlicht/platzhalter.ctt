@@ -7,7 +7,7 @@ using System.Linq;
 
 public class MainMenu : MonoBehaviour 
 {
-	public GameObject StartUnplugged;
+	public GameObject StartGame;
 	public GameObject FindDevices;
 	public GameObject Device;
 	public GameObject ConnectToDevice;
@@ -16,7 +16,7 @@ public class MainMenu : MonoBehaviour
 
 	public float ScrollThreshold = 0.15f;
 	
-	private RectTransform _startUnplugged;
+	private RectTransform _startGame;
 	private RectTransform _findDevices;
 	private RectTransform _device;
 	private RectTransform _connectToDevice;
@@ -48,45 +48,42 @@ public class MainMenu : MonoBehaviour
 		BuildList ();
 		RegisterEvents();
 
-		NetworkManager.Instance.CreateGame();
 		NetworkManager.Instance.OnHostlistRecieved += AddHostList;
 	}
 
 	public void BuildList()
 	{
 		//Start in Unplugged Mode and Find Devices
-		var go = (GameObject)Instantiate(StartUnplugged);
-		_startUnplugged = go.GetComponent<RectTransform>();
-		_startUnplugged.GetComponentInChildren<CTTTap>().Tap += HandleStartUnplugged;
-		_scrollpanel.AddElement(_startUnplugged);
-
-
+		var go = (GameObject)Instantiate(StartGame);
+		_startGame = go.GetComponent<RectTransform>();
+		_startGame.GetComponentInChildren<CTTTap>().Tap += HandleStartGame;
+		_scrollpanel.AddElement(_startGame);
 
 
 		go = (GameObject)Instantiate(FindDevices);
 		_findDevices = go.GetComponent<RectTransform>();
-		_scrollpanel.AddElementAfter(_findDevices, _startUnplugged);
-
-		_scrollpanel.SelectImmediately(_startUnplugged);
+		_scrollpanel.AddElementAfter(_findDevices, _startGame);
+		_findDevices.GetComponentInChildren<CTTTap>().Tap += HandleFindDevices;
+		_scrollpanel.SelectImmediately(_startGame);
 	}
 
-	private void HandleStartUnplugged ()
+	private void HandleStartGame ()
 	{
-		StartCoroutine(SwitchToCoreGameCoroutine());
+		StartCoroutine(SwitchToStartGameCoroutine());
 	}
-
-	private IEnumerator SwitchToCoreGameCoroutine()
+	private IEnumerator SwitchToStartGameCoroutine()
 	{
 		yield return new WaitForSeconds(1f);
-		var anim = GetComponentInParent<Animation>();
-		anim.Play ("SwitchToCoreGame");
-		while(anim.isPlaying)
-		{
-			yield return null;
-		}
-		yield return new WaitForSeconds(1f);
-		GameManager.Instance.StartGame();
+		MainView.Instance.StartTransition(MainView.View.StartGame).AddListener(() =>NetworkManager.Instance.CreateGame());
 	}
+
+
+	private void HandleFindDevices ()
+	{
+		NetworkManager.Instance.RequestHosts();
+	}
+
+
 
 	public void AddHostList(HostData[] hosts)
 	{
@@ -104,8 +101,11 @@ public class MainMenu : MonoBehaviour
 		}
 		foreach(var host in hosts.Where(h => !Devices.ContainsKey(h.gameName)))
 		{
-			//Add Device in View
-
+			var go = (GameObject)Instantiate(Device);
+			var rectTrans = go.GetComponent<RectTransform>();
+			Devices.Add(host.gameName,rectTrans);
+			go.GetComponent<DeviceView>().SetDevice(host);
+			_scrollpanel.AddElementBefore(rectTrans,_findDevices);
 		}
 	}
 
