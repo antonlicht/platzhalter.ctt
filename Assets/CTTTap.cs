@@ -12,9 +12,15 @@ public class CTTTap : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 	{
 		animation.Play();
 	}
-	
+
+	public void StartBlocking()
+	{
+		CTTScrollpanel.BlockScrolling = true;
+	}
+
 	public void OnPointerUp (PointerEventData eventData)
 	{
+		CTTScrollpanel.BlockScrolling = false;
 		animation.Stop();
 		FadeOut();
 	}
@@ -27,6 +33,7 @@ public class CTTTap : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 	public void OnTap()
 	{
 		Debug.Log("Tap");
+		CTTScrollpanel.BlockScrolling = false;
 		Tap();
 	}
 }

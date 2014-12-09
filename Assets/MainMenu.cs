@@ -8,25 +8,19 @@ using System.Linq;
 public class MainMenu : MonoBehaviour 
 {
 	public GameObject StartGame;
-	public GameObject FindDevices;
-	public GameObject Device;
-	public GameObject ConnectToDevice;
-	public GameObject Cancel;
-	public GameObject IncomingRequest;
+	public GameObject Result;
 
 	public float ScrollThreshold = 0.15f;
 	
 	private RectTransform _startGame;
-	private RectTransform _findDevices;
-	private RectTransform _device;
-	private RectTransform _connectToDevice;
-	private RectTransform _cancel;
-	private RectTransform _incomingRequest;
+	private RectTransform _result;
 
 	private CTTScrollpanel _scrollpanel;
 	private CTTTouchInput _touchInput;
 
 	private Dictionary<string, RectTransform> _devices;
+
+	public static MainMenu Instance { get; private set;}
 
 	public Dictionary<string, RectTransform> Devices
 	{
@@ -40,6 +34,12 @@ public class MainMenu : MonoBehaviour
 		}
 	}
 
+
+	void Awake()
+	{
+		Instance = this;
+	}
+
 	void Start()
 	{
 		_scrollpanel = GetComponent<CTTScrollpanel>();
@@ -47,8 +47,6 @@ public class MainMenu : MonoBehaviour
 
 		BuildList ();
 		RegisterEvents();
-
-		NetworkManager.Instance.OnHostlistRecieved += AddHostList;
 	}
 
 	public void BuildList()
@@ -60,53 +58,40 @@ public class MainMenu : MonoBehaviour
 		_scrollpanel.AddElement(_startGame);
 
 
-		go = (GameObject)Instantiate(FindDevices);
-		_findDevices = go.GetComponent<RectTransform>();
-		_scrollpanel.AddElementAfter(_findDevices, _startGame);
-		_findDevices.GetComponentInChildren<CTTTap>().Tap += HandleFindDevices;
-		_scrollpanel.SelectImmediately(_startGame);
+
+	//	_findDevices = go.GetComponent<RectTransform>();
+	//	_scrollpanel.AddElementAfter(_findDevices, _startGame);
+	//	_findDevices.GetComponentInChildren<CTTTap>().Tap += HandleFindDevices;
+	//	_scrollpanel.SelectImmediately(_startGame);
+	}
+
+	public void SwitchToResultScreen(float time)
+	{
+		var go = (GameObject)Instantiate(Result);
+		_result = go.GetComponent<RectTransform>();
+		_result.GetComponent<ResultView>().SetTime(time);
+		_scrollpanel.AddElementAfter(_result, _startGame);
+		_scrollpanel.SelectImmediately(_result);
+		_scrollpanel.DeleteWhenUnselected.Add(_result);
+		StartCoroutine(SwitchToResultScreenCoroutine());
+	}
+
+	public IEnumerator SwitchToResultScreenCoroutine()
+	{
+		yield return new WaitForSeconds(5f);
+		MainView.Instance.StartTransition(MainView.View.MainMenu);
 	}
 
 	private void HandleStartGame ()
 	{
 		StartCoroutine(SwitchToStartGameCoroutine());
 	}
+
 	private IEnumerator SwitchToStartGameCoroutine()
 	{
+		GameManager.Instance.ResetGame();
 		yield return new WaitForSeconds(1f);
-		MainView.Instance.StartTransition(MainView.View.StartGame).AddListener(() =>NetworkManager.Instance.CreateGame());
-	}
-
-
-	private void HandleFindDevices ()
-	{
-		NetworkManager.Instance.RequestHosts();
-	}
-
-
-
-	public void AddHostList(HostData[] hosts)
-	{
-		var hostKeys = Devices.Keys.ToList();
-		for(int i = hostKeys.Count-1; i>=0;i--)
-		{
-			var key = hostKeys[i];
-			if(!hosts.Any(h => h.gameName == key))
-			{
-				var rectTrans = Devices[key];
-				Devices.Remove(key);
-				//Remove Devices in View
-				Destroy (rectTrans.gameObject);
-			}
-		}
-		foreach(var host in hosts.Where(h => !Devices.ContainsKey(h.gameName)))
-		{
-			var go = (GameObject)Instantiate(Device);
-			var rectTrans = go.GetComponent<RectTransform>();
-			Devices.Add(host.gameName,rectTrans);
-			go.GetComponent<DeviceView>().SetDevice(host);
-			_scrollpanel.AddElementBefore(rectTrans,_findDevices);
-		}
+		MainView.Instance.StartTransition(MainView.View.CoreGame).AddListener(() =>GameManager.Instance.StartGame());
 	}
 
 	#region Events

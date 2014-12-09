@@ -12,7 +12,6 @@ public class GameManager : MonoBehaviour
 	public Animation HeartAnimation;
 	public HeartBeat Effects;
 	public Text Beats;
-	public Text TimeTextView;
 	
 	private float _life;
 	private bool _gameRunning;
@@ -24,13 +23,16 @@ public class GameManager : MonoBehaviour
 	void Awake()
 	{
 		Instance = this;
+	}
+
+	public void ResetGame()
+	{
 		_life = GameConstants.TOTAL_BEATS;
 		Beats.text = Mathf.CeilToInt(_life).ToString();
 	}
 
 	public void StartGame()
 	{
-		_life = GameConstants.TOTAL_BEATS;
 		_gameRunning = true;
 		_startTime = Time.time;
 	}
@@ -84,7 +86,7 @@ public class GameManager : MonoBehaviour
 		{
 			Debug.Log("GameOver");
 			Vibration.Vibrate(5000);
-			TimeTextView.text = (Time.time-_startTime).ToString();
+			MainMenu.Instance.SwitchToResultScreen(Time.time-_startTime);
 			_gameRunning = false;
 			HeartState = State.Stopped;
 			

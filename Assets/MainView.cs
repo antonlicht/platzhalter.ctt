@@ -6,7 +6,7 @@ using Holoville.HOTween;
 
 public class MainView : MonoBehaviour 
 {
-	public enum View {MainMenu, StartGame, CoreGame};
+	public enum View {MainMenu, CoreGame};
 
 	public class Transition
 	{

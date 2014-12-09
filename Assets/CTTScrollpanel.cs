@@ -2,6 +2,7 @@
 using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 public class CTTScrollpanel : MonoBehaviour 
 {
@@ -18,6 +19,10 @@ public class CTTScrollpanel : MonoBehaviour
 	private Vector2 _selectedPosition;
 	private bool _refresh;
 	private bool _scroll;
+
+	public static bool BlockScrolling;
+
+	public List<RectTransform> DeleteWhenUnselected = new List<RectTransform>();
 
 	#region Properties
 	public RectTransform SelectedElement
@@ -196,22 +201,23 @@ public class CTTScrollpanel : MonoBehaviour
 
 	public void SetRubberBandPosition(Vector2 delta)
 	{
+		if(BlockScrolling) return;
 		_scroll = false;
 		if(Orientation == ScrollpanelOrientation.Horizontal)
 		{
 			var start = RectTransform.anchoredPosition.x;
 			var end = _selectedPosition.x + Mathf.Sign(delta.x) * RectTransform.rect.width/2f;
-			var time = Mathf.Abs(delta.x)/RectTransform.rect.width;
+			var time = Mathf.Abs(delta.x)/Screen.width;
 			var newPosX = Mathf.Lerp(start, end, time);
-			RectTransform.anchoredPosition = new Vector2(newPosX,_selectedPosition.y);
+			RectTransform.anchoredPosition = new Vector2(newPosX,RectTransform.anchoredPosition.y);
 		}
 		else
 		{
 			var start = RectTransform.anchoredPosition.y;
 			var end = _selectedPosition.y + Mathf.Sign(delta.y) * RectTransform.rect.height/2f;
-			var time = Mathf.Abs(delta.y)/RectTransform.rect.height;
+			var time = Mathf.Abs(delta.y)/Screen.height;
 			var newPosY = Mathf.Lerp(start, end, time);
-			RectTransform.anchoredPosition = new Vector2(_selectedPosition.x,newPosY);
+			RectTransform.anchoredPosition = new Vector2(RectTransform.anchoredPosition.x,newPosY);
 		}
 	}
 
@@ -222,17 +228,19 @@ public class CTTScrollpanel : MonoBehaviour
 
 	private void Scroll()
 	{
+		if(BlockScrolling) return;
 		if(Orientation == ScrollpanelOrientation.Horizontal)
 		{
 			var start = RectTransform.anchoredPosition.x;
 			var end = _selectedPosition.x;
 			var time = Time.deltaTime*ScrollSpeed;
 			var newPosX = Mathf.Lerp(start, end, time);
-			RectTransform.anchoredPosition = new Vector2(newPosX,_selectedPosition.y);
+			RectTransform.anchoredPosition = new Vector2(newPosX,RectTransform.anchoredPosition.y);
 			if(Mathf.Abs(newPosX - end)<= ScrollThreshold)
 			{
 				_scroll = false;
-				RectTransform.anchoredPosition = _selectedPosition;
+				RectTransform.anchoredPosition = new Vector2(_selectedPosition.x,RectTransform.anchoredPosition.y);
+				CheckUnselectDestroy();
 			}
 		}
 		else
@@ -241,12 +249,21 @@ public class CTTScrollpanel : MonoBehaviour
 			var end = _selectedPosition.y;
 			var time = Time.deltaTime*ScrollSpeed;
 			var newPosY = Mathf.Lerp(start, end, time);
-			RectTransform.anchoredPosition = new Vector2(_selectedPosition.x,newPosY);
+			RectTransform.anchoredPosition = new Vector2(RectTransform.anchoredPosition.x,newPosY);
 			if(Mathf.Abs(newPosY - end)<= ScrollThreshold)
 			{
 				_scroll = false;
-				RectTransform.anchoredPosition = _selectedPosition;
+				RectTransform.anchoredPosition = new Vector2(RectTransform.anchoredPosition.x,_selectedPosition.y);
+				CheckUnselectDestroy();
 			}
+		}
+	}
+
+	public void CheckUnselectDestroy()
+	{
+		foreach(RectTransform rectTrans in DeleteWhenUnselected.Where(r => _selected != r))
+		{
+			Remove(rectTrans);
 		}
 	}
 
